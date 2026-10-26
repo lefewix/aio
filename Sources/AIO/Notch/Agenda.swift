@@ -1,11 +1,13 @@
 import EventKit
 import Observation
+import SwiftUI
 
 @MainActor @Observable
 final class Agenda {
     static let shared = Agenda()
+    struct Item: Hashable { var title: String; var start: Date; var end: Date; var color: Color }
 
-    var events: [EKEvent] = []
+    var events: [Item] = []
     @ObservationIgnored private let store = EKEventStore()
 
     func start() {
@@ -21,19 +23,32 @@ final class Agenda {
     }
 
     func reload() {
-        guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else { events = []; return }
         let cal = Calendar.current
         let now = Date()
         let end = cal.date(byAdding: .day, value: 2, to: cal.startOfDay(for: now))!
-        events = Array(store.events(matching: store.predicateForEvents(withStart: now, end: end, calendars: nil))
-            .filter { !$0.isAllDay }
-            .sorted { $0.startDate < $1.startDate }
-            .prefix(3))
+        var items: [Item] = []
+        if EKEventStore.authorizationStatus(for: .event) == .fullAccess {
+            items = store.events(matching: store.predicateForEvents(withStart: now, end: end, calendars: nil))
+                .filter { !$0.isAllDay }
+                .map { Item(title: $0.title ?? "", start: $0.startDate, end: $0.endDate, color: Color(nsColor: $0.calendar.color)) }
+        }
+        let key = { (i: Item) in "\(i.title.lowercased())|\(Int(i.start.timeIntervalSince1970 / 60))" }
+        var seen = Set(items.map(key))
+        for e in Hub.shared.events where !e.allDay && e.end > now && e.start < end {
+            let i = Item(title: e.title, start: e.start, end: e.end, color: e.color.flatMap(Self.hex) ?? .gray)
+            if seen.insert(key(i)).inserted { items.append(i) }
+        }
+        events = Array(items.sorted { $0.start < $1.start }.prefix(3))
     }
 
-    static func when(_ e: EKEvent) -> String {
-        let t = e.startDate.formatted(date: .omitted, time: .shortened)
-        if e.startDate <= .now { return "Now, until \(e.endDate.formatted(date: .omitted, time: .shortened))" }
-        return Calendar.current.isDateInTomorrow(e.startDate) ? "Tomorrow \(t)" : t
+    private static func hex(_ s: String) -> Color? {
+        guard s.count == 7, let v = Int(s.dropFirst(), radix: 16) else { return nil }
+        return Color(red: Double(v >> 16 & 255) / 255, green: Double(v >> 8 & 255) / 255, blue: Double(v & 255) / 255)
+    }
+
+    static func when(_ e: Item) -> String {
+        let t = e.start.formatted(date: .omitted, time: .shortened)
+        if e.start <= .now { return "Now, until \(e.end.formatted(date: .omitted, time: .shortened))" }
+        return Calendar.current.isDateInTomorrow(e.start) ? "Tomorrow \(t)" : t
     }
 }

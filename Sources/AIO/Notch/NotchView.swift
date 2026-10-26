@@ -1,4 +1,3 @@
-import EventKit
 import SwiftUI
 
 private let spring = Animation.spring(response: 0.4, dampingFraction: 0.78)
@@ -197,13 +196,33 @@ private struct Home: View {
     private let np = NowPlaying.shared
 
     var body: some View {
-        HStack(spacing: 20) {
-            if np.hasMedia {
-                NowPlayingView()
-                AgendaView().frame(width: 150)
-            } else {
-                AgendaView().frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 20) {
+                if np.hasMedia {
+                    NowPlayingView()
+                    AgendaView().frame(width: 150)
+                } else {
+                    AgendaView().frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
+            FitRow()
+        }
+    }
+}
+
+private struct FitRow: View {
+    private let hub = Hub.shared
+
+    var body: some View {
+        if let f = hub.fit {
+            HStack(spacing: 14) {
+                if let s = f.steps { Label(s.formatted(), systemImage: "figure.walk") }
+                if let m = f.sleepMin { Label("\(m / 60)h \(m % 60)m", systemImage: "bed.double.fill") }
+                if let hr = f.restingHr { Label("\(hr)", systemImage: "heart.fill") }
+            }
+            .font(.system(size: 11, weight: .medium))
+            .monospacedDigit()
+            .opacity(f.stale ? 0.5 : 1)
         }
     }
 }
@@ -320,9 +339,9 @@ private struct AgendaView: View {
             }
             ForEach(agenda.events, id: \.self) { e in
                 HStack(alignment: .top, spacing: 8) {
-                    Circle().fill(Color(nsColor: e.calendar.color)).frame(width: 7, height: 7).padding(.top, 4)
+                    Circle().fill(e.color).frame(width: 7, height: 7).padding(.top, 4)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(e.title ?? "").font(.system(size: 12, weight: .medium)).lineLimit(1)
+                        Text(e.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
                         Text(Agenda.when(e)).font(.system(size: 10)).foregroundStyle(dim).lineLimit(1)
                     }
                 }

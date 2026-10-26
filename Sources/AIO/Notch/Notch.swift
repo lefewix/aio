@@ -11,7 +11,7 @@ final class Notch {
     static let panelSize = CGSize(width: 560, height: 220)
     static let expandedSize = CGSize(width: 500, height: 180)
 
-    var expanded = false { didSet { if expanded && !oldValue { Agenda.shared.reload() } } }
+    var expanded = false { didSet { if expanded && !oldValue { Agenda.shared.reload(); Hub.shared.refresh() } } }
     var tab = Tab.home
     var hud: HUD?
     var chargeFlash = false
@@ -81,6 +81,7 @@ final class Notch {
 
         Battery.shared.start()
         Agenda.shared.start()
+        Hub.shared.start()
         NowPlaying.shared.start()
     }
 
