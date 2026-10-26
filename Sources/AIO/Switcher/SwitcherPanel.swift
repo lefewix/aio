@@ -102,7 +102,11 @@ struct SwitcherView: View {
         VStack(spacing: Self.gap) {
             ForEach(Array(stride(from: 0, to: n, by: cols)), id: \.self) { start in
                 HStack(spacing: Self.gap) {
-                    ForEach(start..<min(start + cols, n), id: \.self) { tile($0) }
+                    let count = model.windows.count
+                    let lo = min(start, count)
+                    ForEach(Array(model.windows[lo..<min(start + cols, count)].enumerated()), id: \.element.id) { off, w in
+                        tile(w, lo + off)
+                    }
                 }
             }
         }
@@ -111,8 +115,7 @@ struct SwitcherView: View {
         .environment(\.colorScheme, .dark)
     }
 
-    private func tile(_ i: Int) -> some View {
-        let w = model.windows[i]
+    private func tile(_ w: SwitchWindow, _ i: Int) -> some View {
         let width = model.tileWidth
         let selected = i == model.sel
         let icon = w.app.icon ?? NSImage()
