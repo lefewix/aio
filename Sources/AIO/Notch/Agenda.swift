@@ -49,6 +49,12 @@ final class Agenda {
     static func when(_ e: Item) -> String {
         let t = e.start.formatted(date: .omitted, time: .shortened)
         if e.start <= .now { return "Now, until \(e.end.formatted(date: .omitted, time: .shortened))" }
-        return Calendar.current.isDateInTomorrow(e.start) ? "Tomorrow \(t)" : t
+        let cal = Calendar.current
+        if cal.component(.hour, from: .now) < 6 {
+            if cal.isDateInToday(e.start) { return "Today \(t)" }
+            if cal.isDateInTomorrow(e.start) { return "\(e.start.formatted(.dateTime.weekday(.abbreviated))) \(t)" }
+            return t
+        }
+        return cal.isDateInTomorrow(e.start) ? "Tomorrow \(t)" : t
     }
 }
