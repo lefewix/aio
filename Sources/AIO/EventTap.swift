@@ -6,10 +6,11 @@ final class EventTap {
 
     private var handlers: [Handler] = []
     private var tap: CFMachPort?
+    private var started = false
 
     func add(_ handler: @escaping Handler) {
         handlers.append(handler)
-        if tap == nil { start() }
+        if !started { started = true; start() }
     }
 
     private func start() {
@@ -19,7 +20,11 @@ final class EventTap {
                                 eventsOfInterest: mask, callback: { _, type, event, _ in
             EventTap.shared.handle(type, event)
         }, userInfo: nil)
-        guard let tap else { NSLog("AIO: event tap failed (Accessibility?)"); return }
+        guard let tap else {
+            NSLog("AIO: event tap failed (Accessibility?), retrying")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.start() }
+            return
+        }
         CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, tap, 0), .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
     }
