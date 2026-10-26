@@ -12,9 +12,10 @@ clang -arch arm64 -dynamiclib -fobjc-arc -framework Foundation -Wall -o "$APP/Co
 cp Helper/nowplaying.pl "$APP/Contents/Resources/"
 
 ID=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development/ {print $2; exit}')
+[ -n "$ID" ] || ID=$(security find-identity -p codesigning | awk -F'"' '/"AIO Local Signing"/ {print $2; exit}')
 ID=${ID:--}
 echo "Signing with: $([ "$ID" = - ] && echo ad-hoc || echo "$ID")"
-codesign --force --sign - "$APP/Contents/Resources/nowplaying.dylib"
+codesign --force --sign "$ID" "$APP/Contents/Resources/nowplaying.dylib"
 codesign --force --sign "$ID" "$APP"
 
 if [ "$1" = "--install" ]; then
