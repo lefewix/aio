@@ -110,8 +110,8 @@ final class Notch {
 
     func mouseChanged() {
         let inside = hitRect.contains(NSEvent.mouseLocation)
-        if panel.ignoresMouseEvents == inside { panel.ignoresMouseEvents = !inside }
         let dragging = NSEvent.pressedMouseButtons & 1 != 0
+        if panel.ignoresMouseEvents == inside, inside || !dragging { panel.ignoresMouseEvents = !inside }
         if inside {
             collapseTask?.cancel()
             collapseTask = nil

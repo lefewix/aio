@@ -405,6 +405,6 @@ private struct ShelfTile: View {
             .buttonStyle(.plain)
             .padding(3)
         }
-        .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+        .onDrag { NSItemProvider(object: url as NSURL) }
     }
 }
