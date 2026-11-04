@@ -126,24 +126,27 @@ private struct Expanded: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            Color.clear.frame(height: notch.notchSize.height)
             HStack(spacing: 4) {
                 tab(.home, "house.fill")
                 tab(.shelf, "tray.fill")
-                Spacer(minLength: notch.notchSize.width + 16)
+                Spacer()
                 BatteryLabel()
                 AwakeButton()
             }
-            .frame(height: notch.notchSize.height)
+            .frame(height: 28)
             Group {
                 switch notch.tab {
                 case .home: Home()
                 case .shelf: ShelfView()
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
+            .padding(.top, 10)
+            .padding(.bottom, 18)
         }
         .padding(.horizontal, inset + 16)
+        .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
     }
 
     private func tab(_ t: Notch.Tab, _ icon: String) -> some View {
@@ -205,6 +208,7 @@ private struct Home: View {
                     AgendaView().frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            Spacer(minLength: 0)
             FitRow()
         }
     }

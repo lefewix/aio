@@ -8,8 +8,8 @@ final class Notch {
     enum Mode { case idle, wings, expanded }
     struct HUD: Equatable { var icon: String; var level: Float }
 
-    static let panelSize = CGSize(width: 560, height: 220)
-    static let expandedSize = CGSize(width: 500, height: 180)
+    static let panelSize = CGSize(width: 560, height: 260)
+    static let expandedSize = CGSize(width: 500, height: 230)
 
     var expanded = false { didSet { if expanded && !oldValue { Agenda.shared.reload(); Hub.shared.refresh() } } }
     var tab = Tab.home
