@@ -9,7 +9,6 @@ final class SwitcherModel {
     var thumbs: [CGWindowID: NSImage] = [:]
     var tileWidth: CGFloat = 220
     var cols = 1
-    @ObservationIgnored var hoverArmedAt: NSPoint?
 }
 
 private final class FirstMouseHost<V: View>: NSHostingView<V> {
@@ -28,6 +27,7 @@ final class SwitcherPanel {
         p.backgroundColor = .clear
         p.hasShadow = true
         p.hidesOnDeactivate = false
+        host.sizingOptions = []
         p.contentView = host
         return p
     }()
@@ -36,8 +36,12 @@ final class SwitcherPanel {
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main else { return }
         layout(in: screen.visibleFrame)
-        model.hoverArmedAt = mouse
-        let size = host.fittingSize
+        let n = max(model.windows.count, 1)
+        let cols = max(model.cols, 1)
+        let rows = (n + cols - 1) / cols
+        let pad = SwitcherView.pad, gap = SwitcherView.gap, tw = model.tileWidth
+        let size = NSSize(width: CGFloat(cols) * tw + CGFloat(cols - 1) * gap + 2 * pad,
+                          height: CGFloat(rows) * SwitcherView.tileHeight(tw) + CGFloat(rows - 1) * gap + 2 * pad)
         let f = screen.visibleFrame
         panel.setFrame(NSRect(x: f.midX - size.width / 2, y: f.midY - size.height / 2, width: size.width, height: size.height), display: true)
         panel.orderFrontRegardless()
@@ -143,12 +147,6 @@ struct SwitcherView: View {
         .background(.white.opacity(selected ? 0.16 : 0), in: .rect(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.accentColor, lineWidth: selected ? 2 : 0))
         .contentShape(.rect)
-        .onHover { inside in
-            // Ignore the hover fired by the panel appearing under a still mouse.
-            guard inside, NSEvent.mouseLocation != model.hoverArmedAt else { return }
-            model.hoverArmedAt = nil
-            model.sel = i
-        }
         .onTapGesture {
             model.sel = i
             Switcher.shared.commit()
