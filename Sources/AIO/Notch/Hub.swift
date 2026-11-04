@@ -24,10 +24,17 @@ final class Hub {
         }
     }
 
+    /// Glance endpoint, e.g. https://hub.example.com/api/glance. Set with
+    /// `defaults write ca.felix.aio hubURL <url>`; unset = the hub is off.
+    private static var url: URL? {
+        guard let s = UserDefaults.standard.string(forKey: "hubURL"), !s.isEmpty else { return nil }
+        return URL(string: s)
+    }
+
     func refresh() {
-        guard Date().timeIntervalSince(last) >= 60, let token = Self.token() else { return }
+        guard Date().timeIntervalSince(last) >= 60, let url = Self.url, let token = Self.token() else { return }
         last = Date()
-        var req = URLRequest(url: URL(string: "https://hub.example.com/api/glance")!)
+        var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         Task {
             let dec = JSONDecoder()

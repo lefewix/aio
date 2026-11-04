@@ -60,7 +60,12 @@ notch.
 - **Signing**: `build.sh` uses an Apple Development identity if you have one, then a local self-signed
   identity, then ad-hoc.
 - **Personal hub** (optional): the notch can also show calendar and fitness stats from a self-hosted
-  dashboard. It only runs if a token is in the Keychain; without one, it does nothing.
+  dashboard that serves `{"events": [...], "fit": {...}}`. It's off unless both are set:
+
+  ```sh
+  defaults write ca.felix.aio hubURL https://hub.example.com/api/glance
+  security add-generic-password -s aio-hub -a glance -w <token>
+  ```
 
 ```
 Sources/AIO/App.swift          menu bar item, Keep Awake, launch at login
